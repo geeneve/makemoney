@@ -3,6 +3,7 @@ import time
 import pyupbit
 import datetime
 import requests
+import numpy as np
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -115,8 +116,9 @@ while True:
             if minute != now_minute:
                 # k값 업데이트
                 k = get_bestk()
+                krw = get_balance("KRW")
                 minute = now_minute
-                msg = f"목표 매수가: {target_price}\n현재 가격: {current_price}\n현재 시간: {now}\nKR 잔고: {krw}\n"
+                msg = f"현재 시간: {now}\n목표 매수가: {target_price}\n현재 가격: {current_price}\nKR 잔고: {krw}\n"
                 post_message(myToken, channel, msg)
 
         else:
@@ -124,7 +126,7 @@ while True:
             if btc > 0.00008:
                 sell_result = upbit.sell_market_order("KRW-BTC", btc * 0.9995)
                 current_price = get_current_price("KRW-BTC")
-                sell_msg = f"**********\n매도체결 (SELL)\n매도액:{float(sell_result['volume']) * current_price}\nBTC 가격:{current_price}\n**********\n"
+                sell_msg = f"**********\n매도체결 (SELL)\n매도액: {float(sell_result['volume']) * current_price}\nBTC 가격: {current_price}\n**********\n"
                 post_message(myToken, channel, sell_msg)
         time.sleep(1)
     except Exception as e:
