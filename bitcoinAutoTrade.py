@@ -1,5 +1,6 @@
 import os
 import time
+import traceback
 import pyupbit
 import datetime
 import requests
@@ -64,6 +65,9 @@ def get_current_price(ticker):
 def get_ror(k):
     """k에 따른 수익률 조회"""
     df = pyupbit.get_ohlcv("KRW-BTC")
+    if df is None:
+        while df is not None:
+            time.sleep(1)
     df["range"] = (df["high"] - df["low"]) * k
     df["target"] = df["open"] + df["range"].shift(1)
 
@@ -129,6 +133,7 @@ while True:
                 post_message(myToken, channel, sell_msg)
         time.sleep(1)
     except Exception as e:
+        traceback.print_exc()
         print(e)
         post_message(myToken, channel, e)
         time.sleep(1)
