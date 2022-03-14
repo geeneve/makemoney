@@ -90,7 +90,7 @@ upbit = pyupbit.Upbit(access, secret)
 print("autotrade start")
 # 시작 메세지 슬랙 전송
 post_message(myToken, channel, "autotrade start")
-minute = 0
+hour = -1
 k = 0.5
 
 # 자동매매 시작
@@ -105,20 +105,19 @@ while True:
             target_price = get_target_price("KRW-BTC", k)
             ma15 = get_ma15("KRW-BTC")
             current_price = get_current_price("KRW-BTC")
+            krw = get_balance("KRW")
             if target_price < current_price and ma15 < current_price:
-                krw = get_balance("KRW")
                 if krw > 5000:
                     buy_result = upbit.buy_market_order("KRW-BTC", krw * 0.9995)
                     buy_msg = f'**********\n매수체결 (BUY)\n매수액: {buy_result["price"]}\n수수료: {buy_result["reserved_fee"]}\nBTC 가격: {current_price}\n**********\n'
                     post_message(myToken, channel, buy_msg)
 
-            now_minute = now.minute // 30
-            if minute != now_minute:
+            now_hour = now.hour
+            if hour != now_hour:
                 # k값 업데이트
                 k = get_bestk()
-                krw = get_balance("KRW")
-                minute = now_minute
-                msg = f"현재 시간: {now}\n목표 매수가: {target_price}\n현재 가격: {current_price}\nKR 잔고: {krw}\n"
+                hour = now_hour
+                msg = f"현재 시간: {now}\n목표 매수가: {max(target_price, ma15)}\n현재 가격: {current_price}\nKR 잔고: {krw}\n"
                 post_message(myToken, channel, msg)
 
         else:
