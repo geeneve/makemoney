@@ -122,7 +122,7 @@ while True:
                 hour = now_hour
                 if hour % 2 == 0:
                     msg = f"현재 시간: {now}\n목표 매수가: {max(target_price, ma15)}\n현재 가격: {current_price}\nKR 잔고: {krw}\n"
-                post_message(myToken, channel, msg)
+                    post_message(myToken, channel, msg)
 
         else:
             btc = get_balance("BTC")
