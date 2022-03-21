@@ -65,9 +65,7 @@ def get_current_price(ticker):
 def get_ror(k):
     """k에 따른 수익률 조회"""
     df = pyupbit.get_ohlcv("KRW-BTC")
-    if df is None:
-        while df is not None:
-            time.sleep(1)
+    time.sleep(1)
     df["range"] = (df["high"] - df["low"]) * k
     df["target"] = df["open"] + df["range"].shift(1)
 
@@ -120,8 +118,10 @@ while True:
             if hour != now_hour:
                 # k값 업데이트
                 k = get_bestk()
+                time.sleep(1)
                 hour = now_hour
-                msg = f"현재 시간: {now}\n목표 매수가: {max(target_price, ma15)}\n현재 가격: {current_price}\nKR 잔고: {krw}\n"
+                if hour % 2 == 0:
+                    msg = f"현재 시간: {now}\n목표 매수가: {max(target_price, ma15)}\n현재 가격: {current_price}\nKR 잔고: {krw}\n"
                 post_message(myToken, channel, msg)
 
         else:
