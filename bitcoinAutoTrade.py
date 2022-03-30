@@ -1,3 +1,4 @@
+from math import ceil
 import os
 import time
 import traceback
@@ -87,13 +88,20 @@ def get_bestk():
     return bestk
 
 
+def convert_krw(amount):
+    """읽기 쉬운 단위로 변환"""
+    return format(ceil(float(amount)), ",d") + "원"
+
+
 # 로그인
 upbit = pyupbit.Upbit(access, secret)
 print("autotrade start")
 # 시작 메세지 슬랙 전송
 post_message(myToken, channel, "autotrade start")
+
 hour = -1
 k = 0.5
+buy_price = 0
 
 # 자동매매 시작
 while True:
@@ -111,17 +119,25 @@ while True:
             if target_price < current_price and ma15 < current_price:
                 if krw > 5000:
                     buy_result = upbit.buy_market_order("KRW-BTC", krw * 0.9995)
-                    buy_msg = f'**********\n매수체결 (BUY)\n매수액: {buy_result["price"]}\n수수료: {buy_result["reserved_fee"]}\nBTC 가격: {current_price}\n**********\n'
+                    buy_msg = f'**********\n매수체결 (BUY)\n매수액: {convert_krw(buy_result["price"])}\nBTC 가격: {convert_krw(current_price)}\n**********\n'
                     post_message(myToken, channel, buy_msg)
+                    buy_price = current_price
 
             now_hour = now.hour
             if hour != now_hour:
-                # k값 업데이트
+                # 시간당 한 번 k값 업데이트
                 k = get_bestk()
                 time.sleep(1)
                 hour = now_hour
+
+                # 2시간에 한 번 슬랙 알림
                 if hour % 2 == 0:
-                    msg = f"현재 시간: {now}\n목표 매수가: {max(target_price, ma15)}\n현재 가격: {current_price}\nKR 잔고: {krw}\n"
+                    if buy_price > 0:
+                        # 오늘 구매한 경우 메시지
+                        msg = f"매수O\n매수가: {convert_krw(buy_price)}\n현재가: {convert_krw(current_price)}\n손익: {convert_krw(current_price-buy_price)}\n"
+                    else:
+                        # 오늘 구매하지 않은 경우 메시지
+                        msg = f"매수X\n목표 매수가: {convert_krw(max(target_price, ma15))}\n현재가: {convert_krw(current_price)}\n차액: {convert_krw(max(target_price, ma15) - current_price)}\n"
                     post_message(myToken, channel, msg)
 
         else:
@@ -131,6 +147,7 @@ while True:
                 current_price = get_current_price("KRW-BTC")
                 sell_msg = f"**********\n매도체결 (SELL)\n매도액: {float(sell_result['volume']) * current_price}\nBTC 가격: {current_price}\n**********\n"
                 post_message(myToken, channel, sell_msg)
+                buy_price = 0
         time.sleep(1)
     except Exception as e:
         traceback.print_exc()
